@@ -8,7 +8,7 @@ This can be achieved by using the Markdown syntax and [its extension from the Ob
 ## Example
 
 ```typst
-#import "luzid-checkbox.typ": luzid
+#import "@preview/luzid-checkbox:0.1.0": luzid
 
 #show: luzid
 
@@ -49,7 +49,7 @@ The color, icon and styling for each type of box can be overwritten.
 Only the boxes specified get overwritten, the rest stays at the default values:
 
 ```typst
-#import "../luzid-checkbox.typ": luzid
+#import "@preview/luzid-checkbox:0.1.0": luzid
 
 #show: luzid.with(
 	color-map: (
@@ -67,6 +67,11 @@ Only the boxes specified get overwritten, the rest stays at the default values:
 - [x] Icon
 - [!] Styling
 ```
+
+## Custom icons
+
+When a svg is detected, the template replaces the string "currentColor" inside the svg with the rgb-hex-value of the markers-color.
+Use this for changing the color of the icon.
 
 ![](example/example.2.png)
 
