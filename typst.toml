@@ -8,4 +8,4 @@ description = "Write checklists in a markdown syntax and use icons like many Obs
 repository = "https://github.com/z1glr/luzid-checkbox"
 keywords = ["list", "icon", "checkbox"]
 categories = ["components", "visualization", "text"]
-exclude = ["/example/*", "/test/*"]
+exclude = ["/example/*", "/test/*", "justfile"]
