@@ -1,2 +1,2 @@
 install:
-	utpm workspace link --force
+	utpm workspace link --force -n
