@@ -1,6 +1,6 @@
 [package]
 name = "luzid-checkbox"
-version = "0.1.0"
+version = "0.2.0"
 entrypoint = "luzid-checkbox.typ"
 authors = ["z1glr"]
 license = "GPL-3.0-or-later"

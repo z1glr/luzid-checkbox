@@ -143,7 +143,7 @@
   }
 
   // creates the instance of the marker
-  let icon(im) = body => context {
+  let icon(im) = {
     let type = char-names-map.at(im)
 
     scale(
@@ -152,7 +152,7 @@
       box(
         image(
           get-marker(type),
-          height: measure(body).height,
+          height: 0.7em,
         ),
       ),
     )
@@ -174,99 +174,97 @@
   // modify lists
   show list: it => {
     let is-checklist = false
-    let default-marker = if type(it.marker) == array {
-      it.marker.at(0)
-    } else { it.marker }
+    let default-marker = if type(it.marker) == array { it.marker.at(0) } else { it.marker }
     let symbols-list = ()
     let body-list = ()
 
     // go through all children
     for ch in it.children {
-      if type(ch.body) == content and ch.body.func() == [].func() {
-        // is content and sequence
+      let is-box = false
+      let box-type = none
+      let item-text = none
 
-        let bd-ch = ch.body.children
-
-        // check for checkbox
+      // pandoc-checkbox
+      if (
+        type(ch.body) == content and ch.body.func() == text
+      ) {
+        // with content
         if (
-          bd-ch.len() >= 3
-            and bd-ch.at(1) == [ ]
-            and bd-ch.at(0).has("text")
-            and pandoc-map.keys().contains(bd-ch.at(0).text)
-        ) {
-          // is pandoc-checkbox
-          is-checklist = true
-
-          let pandoc-ident = bd-ch.at(0).text
-          let ident = pandoc-map.at(bd-ch.at(0).text)
-
-          symbols-list.push(pandoc-map.at(pandoc-ident)(ch.body.children.slice(2).join()))
-
-          let body = ch.body.children.slice(2).join()
-
-          if ident in style-map.keys() {
-            body = style-map.at(ident)(body)
-          }
-
-          body-list.push(body)
-
-          // check for custom-box
-        } else if (
-          bd-ch.len() >= 5
-            and content-to-string(bd-ch.at(0)) == "["
-            and content-to-string(bd-ch.at(2)) == "]"
-            and content-to-string(bd-ch.at(3)) == " "
-            and char-names-map.keys().contains(content-to-string(bd-ch.at(1)))
-        ) {
-          // is custom checkbox
-          is-checklist = true
-
-          let ident-string = content-to-string(bd-ch.at(1))
-          let ident = char-names-map.at(ident-string)
-
-          symbols-list.push(icon(ident-string)(ch.body.children.slice(4).join()))
-
-          let body = ch.body.children.slice(4).join()
-
-
-          if style-map.at(ident) != none {
-            body = style-map.at(ident)(body)
-          }
-
-          body-list.push(body)
-        } else {
-          // is no checkbox
-          symbols-list.push(default-marker)
-          body-list.push(ch.body)
-        }
-      } else {
-        // checkbox icons from pandoc
-
-        // if long enough for checkbox and starts with checkbox icon, redefine
-        if (
-          ch.body.has("text")
-            and ch.body.text.len() >= 3
+          ch.body.text.len() >= 5 // 3 for symbol, 1 space, 1+ content
+            and ch.body.text.at(3) == " "
             and pandoc-map.keys().contains(ch.body.text.at(0))
-            and ch.body.text.codepoints().at(1) == " "
         ) {
-          // is checkbox
-          is-checklist = true
-
-          let ident = pandoc-map.at(ch.body.text.at(0))
-
-          symbols-list.push(icon(ident)(ch.body.text.codepoints().slice(2).join()))
-
-          let body = ch.body.text.codepoints().slice(2).join()
-
-          if ident in style-map.keys() {
-            body = style-map.at(ident)(body)
-          }
-
-          body-list.push(body)
-        } else {
-          symbols-list.push(default-marker)
-          body-list.push(ch.body)
+          is-box = true
+          box-type = pandoc-map.at(ch.body.text.at(0))
+          item-text = ch.body.text.slice(4)
+          // empty checkbox
+        } else if (
+          ch.body.text.len() >= 3 and pandoc-map.keys().contains(ch.body.text.at(0))
+        ) {
+          is-box = true
+          box-type = pandoc-map.at(ch.body.text.at(0))
+          item-text = []
         }
+      }
+
+      // content and sequence
+      if type(ch.body) == content and ch.body.func() == [].func() {
+        if ch.body.children.at(0).text.len() != 3 {
+          let elem = ch.body.children.at(0).text
+
+          // pandoc-box
+          if (
+            elem.len() >= 4 and elem.at(3) == " " and pandoc-map.keys().contains(elem.at(0))
+          ) {
+            is-box = true
+            box-type = pandoc-map.at(elem.at(0))
+            item-text = (ch.body.children.at(0).text.slice(4), ..ch.body.children.slice(1)).join()
+
+            // typst-box
+          } else if (
+            ch.body.children.len() >= 5
+              and ch.body.children.at(0) != "["
+              and char-names-map.keys().contains(content-to-string(ch.body.children.at(1)))
+              and ch.body.children.at(2) != "]"
+              and ch.body.children.at(3) != " "
+          ) {
+            is-box = true
+            box-type = content-to-string(ch.body.children.at(1))
+            item-text = ch.body.children.slice(4).join()
+
+            // empty typst box
+          } else if (
+            ch.body.children.len() >= 3
+              and ch.body.children.at(0) != "["
+              and char-names-map.keys().contains(content-to-string(ch.body.children.at(1)))
+              and ch.body.children.at(2) != "]"
+          ) {
+            is-box = true
+            box-type = content-to-string(ch.body.children.at(1))
+            item-text = []
+          }
+        } else {
+          if (
+            ch.body.children.len() >= 3
+              and ch.body.children.at(1) == [ ]
+              and ch.body.children.at(0).has("text")
+              and pandoc-map.keys().contains(ch.body.children.at(0).text)
+          ) {
+            is-box = true
+            box-type = pandoc-map.at(ch.body.children.at(0).text)
+            item-text = ch.body.children.slice(2).join()
+          }
+        }
+      }
+
+      if is-box {
+        is-checklist = true
+
+        symbols-list.push(icon(box-type))
+        body-list.push(item-text)
+      } else {
+        symbols-list.push(default-marker)
+        body-list.push(ch.body)
       }
     }
 
