@@ -212,6 +212,7 @@
         if ch.body.children.at(0).text.len() != 3 {
           let elem = ch.body.children.at(0).text
 
+
           // pandoc-box
           if (
             elem.len() >= 4 and elem.at(3) == " " and pandoc-map.keys().contains(elem.at(0))
@@ -223,10 +224,10 @@
             // typst-box
           } else if (
             ch.body.children.len() >= 5
-              and ch.body.children.at(0) != "["
+              and ch.body.children.at(0) == [\[]
               and char-names-map.keys().contains(content-to-string(ch.body.children.at(1)))
-              and ch.body.children.at(2) != "]"
-              and ch.body.children.at(3) != " "
+              and ch.body.children.at(2) == [\]]
+              and ch.body.children.at(3) == [ ]
           ) {
             is-box = true
             box-type = content-to-string(ch.body.children.at(1))
@@ -235,9 +236,9 @@
             // empty typst box
           } else if (
             ch.body.children.len() >= 3
-              and ch.body.children.at(0) != "["
+              and ch.body.children.at(0) == "["
               and char-names-map.keys().contains(content-to-string(ch.body.children.at(1)))
-              and ch.body.children.at(2) != "]"
+              and ch.body.children.at(2) == "]"
           ) {
             is-box = true
             box-type = content-to-string(ch.body.children.at(1))
